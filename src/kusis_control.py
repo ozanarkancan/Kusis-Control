@@ -3,12 +3,14 @@ from selenium.webdriver.common.keys import Keys
 
 import argparse
 import time
+import pandas as pd
 
 def get_args():
         parser = argparse.ArgumentParser(prog="kusis_control")
         parser.add_argument("--assignment", default='SpecifyAnAssignment', help="assignment")
         parser.add_argument("--user", default='', help="user name")
         parser.add_argument("--pass", default='', help="password")
+        parser.add_argument("--grades", default='../data/ps10_withid.csv', help="the csv file that contains grade with ids")
 
         args = vars(parser.parse_args())
         return args
@@ -23,7 +25,6 @@ def find_assignment(browser, assignment):
             els = boxblue.find_elements_by_xpath('.//tr')
             for el in els:
                 cols = el.text.encode('utf-8').strip().split()
-                print 'Cols: ', cols
                 if assignment in cols:
                     found = True
                     index = cols.index(assignment)
@@ -38,6 +39,38 @@ def find_assignment(browser, assignment):
         print e
 
     return index
+
+def enter_grades_to_boxes(browser, colindex, grades):
+    total = 0
+    student = 0
+
+    while total == 0 or student != total:        
+        el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
+        tables = el8.find_elements_by_xpath(".//table[@role='presentation']")
+        t = tables[4]
+        trs = t.find_elements_by_xpath(".//tr")
+        trs1 = trs[2::4]
+        trs2 = trs[1::4]
+
+        if total == 0:
+            total = len(trs1)
+
+        ntr = trs1[student]
+        inptr = trs2[student]
+
+        student += 1
+        kusisid = ntr.text.encode('utf-8').strip().split()[-1]
+        inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
+        box = inps[colindex]
+        if box.is_enabled():
+            print 'Kusis id: ', kusisid,
+            q = grades.query('id == "{}"'.format(kusisid))
+            if len(q) > 0:
+                grade = q.get_values()[0, 2]
+                print 'Grade: ', grade
+                box.send_keys(str(grade))
+                box.send_keys(Keys.ENTER)
+                time.sleep(4)
 
 def enter_grade(args):
     browser = webdriver.Chrome()
@@ -63,34 +96,10 @@ def enter_grade(args):
     if index == -1:
         print 'Assignment could not found...'
     else:
-        print 'Index: ', index
-        student = 0
-        total = 0
-
-        while total == 0 or student != total:        
-            el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
-            tables = el8.find_elements_by_xpath(".//table[@role='presentation']")
-            t = tables[4]
-            trs = t.find_elements_by_xpath(".//tr")
-            trs1 = trs[2::4]
-            trs2 = trs[1::4]
-            
-            if total == 0:
-                total = len(trs1)
-                
-            ntr = trs1[student]
-            inptr = trs2[student]
-            
-            student += 1
-            kusisid = ntr.text.encode('utf-8').strip().split()[-1]
-            print 'Kusis id: ', kusisid
-            inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
-            box = inps[index - 2]
-            if box.is_enabled():
-                box.send_keys('10')
-                box.send_keys(Keys.ENTER)
-            time.sleep(2)
-            
+        grades = pd.read_csv(args['grades'])
+        colindex = index - 2
+        enter_grades_to_boxes(browser, colindex, grades)
+        time.sleep(180)
     
     browser.quit()
 
