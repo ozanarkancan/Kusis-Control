@@ -1,4 +1,6 @@
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+
 import argparse
 import time
 
@@ -30,7 +32,7 @@ def find_assignment(browser, assignment):
             if not found:
                 next_btn = browser.find_element_by_id('DERIVED_LAM_RIGHT_MOVE')
                 next_btn.click()
-                time.sleep(3)
+                time.sleep(2)
     
     except Exception as e:
         print e
@@ -61,17 +63,35 @@ def enter_grade(args):
     if index == -1:
         print 'Assignment could not found...'
     else:
-        el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
-        #print 'Table text: ', el8.text.encode('utf-8')
-        trs = el8.find_elements_by_xpath('.//tr')
-        
-        for tr in trs:
-            boxes = tr.find_elements_by_class_name('PSEDITBOX')
-            print "Len boxes: ", len(boxes)
+        print 'Index: ', index
+        student = 0
+        total = 0
 
-            for box in boxes:
-                print box.text.encode('utf-8')
-
+        while total == 0 or student != total:        
+            el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
+            tables = el8.find_elements_by_xpath(".//table[@role='presentation']")
+            t = tables[4]
+            trs = t.find_elements_by_xpath(".//tr")
+            trs1 = trs[2::4]
+            trs2 = trs[1::4]
+            
+            if total == 0:
+                total = len(trs1)
+                
+            ntr = trs1[student]
+            inptr = trs2[student]
+            
+            student += 1
+            kusisid = ntr.text.encode('utf-8').strip().split()[-1]
+            print 'Kusis id: ', kusisid
+            inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
+            box = inps[index - 2]
+            if box.is_enabled():
+                box.send_keys('10')
+                box.send_keys(Keys.ENTER)
+            time.sleep(2)
+            
+    
     browser.quit()
 
 if __name__ == "__main__":
