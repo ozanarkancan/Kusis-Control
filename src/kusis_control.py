@@ -59,18 +59,20 @@ def enter_grades_to_boxes(browser, colindex, grades):
         inptr = trs2[student]
 
         student += 1
-        kusisid = ntr.text.encode('utf-8').strip().split()[-1]
+        splits = ntr.text.encode('utf-8').strip().split()
+        kusisid = splits[-1]
+        name = ' '.join(splits[:-1])
         inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
         box = inps[colindex]
         if box.is_enabled():
-            print 'Kusis id: ', kusisid,
+            print '\nName: {} Kusis id: {} '.format(name, kusisid),
             q = grades.query('id == "{}"'.format(kusisid))
             if len(q) > 0:
                 grade = q.get_values()[0, 2]
                 print 'Grade: ', grade
                 box.send_keys(str(grade))
                 box.send_keys(Keys.ENTER)
-                time.sleep(4)
+            time.sleep(5)
 
 def enter_grade(args):
     browser = webdriver.Chrome()
