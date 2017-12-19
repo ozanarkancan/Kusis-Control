@@ -7,10 +7,10 @@ import pandas as pd
 
 def get_args():
         parser = argparse.ArgumentParser(prog="kusis_control")
-        parser.add_argument("--assignment", default='SpecifyAnAssignment', help="assignment")
-        parser.add_argument("--user", default='', help="user name")
-        parser.add_argument("--pass", default='', help="password")
-        parser.add_argument("--grades", default='../data/ps10_withid.csv', help="the csv file that contains grade with ids")
+        parser.add_argument("--assignment", default='SpecifyAnAssignment', help="assignment", required=True)
+        parser.add_argument("--user", default='', help="user name", required=True)
+        parser.add_argument("--pass", default='', help="password", required=True)
+        parser.add_argument("--grades", default='../data/ps10_withid.csv', help="the csv file that contains grade with ids", required=True)
 
         args = vars(parser.parse_args())
         return args
@@ -105,7 +105,7 @@ def enter_grade(args):
     index = find_assignment(browser, args['assignment'])
     
     if index == -1:
-        print 'Assignment could not found...'
+        print 'Assignment could not be found...'
     else:
         grades = pd.read_csv(args['grades'])
         colindex = index - 2
