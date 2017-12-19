@@ -44,35 +44,44 @@ def enter_grades_to_boxes(browser, colindex, grades):
     total = 0
     student = 0
 
-    while total == 0 or student != total:        
-        el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
-        tables = el8.find_elements_by_xpath(".//table[@role='presentation']")
-        t = tables[4]
-        trs = t.find_elements_by_xpath(".//tr")
-        trs1 = trs[2::4]
-        trs2 = trs[1::4]
+    while total == 0 or student != total:
+        sleep_time = 2
+        done = False
+        while not done:
+            try:
+                el8 = browser.find_element_by_id('ACE_DERIVED_SSTSNAV_')
+                tables = el8.find_elements_by_xpath(".//table[@role='presentation']")
+                t = tables[4]
+                trs = t.find_elements_by_xpath(".//tr")
+                trs1 = trs[2::4]
+                trs2 = trs[1::4]
 
-        if total == 0:
-            total = len(trs1)
+                if total == 0:
+                    total = len(trs1)
 
-        ntr = trs1[student]
-        inptr = trs2[student]
+                ntr = trs1[student]
+                inptr = trs2[student]
 
-        student += 1
-        splits = ntr.text.encode('utf-8').strip().split()
-        kusisid = splits[-1]
-        name = ' '.join(splits[:-1])
-        inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
-        box = inps[colindex]
-        if box.is_enabled():
-            print '\nName: {} Kusis id: {} '.format(name, kusisid),
-            q = grades.query('id == "{}"'.format(kusisid))
-            if len(q) > 0:
-                grade = q.get_values()[0, 2]
-                print 'Grade: ', grade
-                box.send_keys(str(grade))
-                box.send_keys(Keys.ENTER)
-            time.sleep(5)
+                splits = ntr.text.encode('utf-8').strip().split()
+                kusisid = splits[-1]
+                name = ' '.join(splits[:-1])
+                inps = inptr.find_elements_by_xpath(".//input[starts-with(@name, 'DERIVED_LAM_GRADE')]")
+                box = inps[colindex]
+                if box.is_enabled():
+                    print '\nName: {} Kusis id: {} '.format(name, kusisid),
+                    q = grades.query('id == "{}"'.format(kusisid))
+                    if len(q) > 0:
+                        grade = q.get_values()[0, 2]
+                        print 'Grade: ', grade
+                        box.send_keys(str(grade))
+                    box.send_keys(Keys.ENTER)
+                student += 1
+                done = True
+                time.sleep(sleep_time)
+            
+            except Exception as e:
+                print e
+                sleep_time  += 1
 
 def enter_grade(args):
     browser = webdriver.Chrome()
