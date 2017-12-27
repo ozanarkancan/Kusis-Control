@@ -71,7 +71,7 @@ def enter_grades_to_boxes(browser, colindex, grades):
                     print '\nName: {} Kusis id: {} '.format(name, kusisid),
                     q = grades.query('id == "{}"'.format(kusisid))
                     if len(q) > 0:
-                        grade = q.get_values()[0, 2]
+                        grade = q['grade'].get_values()[0]
                         print 'Grade: ', grade
                         box.send_keys(str(grade))
                     box.send_keys(Keys.ENTER)
